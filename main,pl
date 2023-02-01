@@ -1,0 +1,37 @@
+if(P,Q,_) :- P,!,Q.
+if(_,_,R) :- R.
+
+stat(X) :- between(20,100,X).%X>=20, X=<100,integer(X).
+subStatTree(X,Y,Z) :- stat(X),stat(Y),stat(Z),(X+Y+Z)=<165.
+statTreeNoMods(X,Y,Z,A,B,C) :- subStatTree(X,Y,Z),subStatTree(A,B,C).
+
+statValue(X) :- between(0,100,X).
+modsList(X) :- list_length(X,Y),Y=<5.
+slot(X) :- between(1,6,X).%X>0,X<7,integer(X).
+aMod(X,Y) :- slot(X),between(-100,100,Y).
+applyOneMod(S,X,Y,[A,B]) :- aMod(A,B),statValue(Y),statValue(X),slot(S),if(S=:=A,X=:=Y+B,X=Y).
+applyMod(_,X,Y,[]) :- statValue(X),statValue(Y),X =:= Y.
+applyMod(S,X,Y,[[A|B]]) :- applyOneMod(S,X,Y,[A,B]).
+applyMod(S,X,Y,[[A|B],R]) :- applyMod(S,N,Y,R),applyOneMod(S,C,Y,[A,B]),statValue(X),statValue(N),X=:=N+C-Y.
+
+pMod([X,Y]) :- aMod(X,Y),(Y=5;Y=10).
+ispMod([]).
+ispMod([H|T]) :- pMod(H),ispMod(T).
+primaryMods(X) :- modsList(X),ispMod(X).
+
+statTreeWithPrimaryMods(X,Y,Z,A,B,C,L) :- primaryMods(L),statTreeNoMods(Xs,Ys,Zs,As,Bs,Cs),applyMod(1,X,Xs,L),applyMod(2,Y,Ys,L),applyMod(3,Z,Zs,L),applyMod(4,A,As,L),applyMod(5,B,Bs,L),applyMod(6,C,Cs,L).
+
+atMod([X,Y]) :- aMod(X,Y),(Y=3).
+isatMod([]).
+isatMod([H|T]) :- atMod(H),isatMod(T).
+artificerMods(X) :- modsList(X),isatMod(X).
+
+statTreeWithArtificerMods(X,Y,Z,A,B,C,L) :- artificerMods(L),statTreeNoMods(Xs,Ys,Zs,As,Bs,Cs),applyMod(1,X,Xs,L),applyMod(2,Y,Ys,L),applyMod(3,Z,Zs,L),applyMod(4,A,As,L),applyMod(5,B,Bs,L),applyMod(6,C,Cs,L).
+
+statTreeWithPuAMods(X,Y,Z,A,B,C,L,Lm) :- artificerMods(L),statTreeWithPrimaryMods(Xs,Ys,Zs,As,Bs,Cs,Lm),applyMod(1,X,Xs,L),applyMod(2,Y,Ys,L),applyMod(3,Z,Zs,L),applyMod(4,A,As,L),applyMod(5,B,Bs,L),applyMod(6,C,Cs,L).
+
+list_length(Xs,L) :- list_length(Xs,0,L) .
+list_length( []     , L , L ) .
+list_length( [_|Xs] , T , L ) :-
+  T1 is T+1 ,
+  list_length(Xs,T1,L).
